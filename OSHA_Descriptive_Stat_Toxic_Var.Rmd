@@ -1,0 +1,616 @@
+---
+title: "OSHA_Descriptive_Stat_Toxic_Var"
+author: "Ambar Mishra"
+date: "4/1/2021"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+## Importing data
+
+```{r}
+library(formattable)
+cleaned_data <- read.csv("CA_prison_insp_viol_2010_op_fac_long.csv")
+```
+
+I will subset the data to have only violations. I will work with the noviol column to form this subset. 
+
+Noviol == FALSE means there WAS a violation
+
+```{r}
+cleaned_data_with_violation = cleaned_data[cleaned_data$noviol == FALSE, ]
+#cleaned_data_with_violation
+
+```
+
+
+
+# Calculating Summary Statistics
+
+I will calculate the averages of the toxic variables.
+
+## Frequency of Violation Type
+
+```{r}
+violation_occurances <- table(cleaned_data_with_violation$viol_type)
+violation_occurances
+```
+
+```{r}
+barplot(violation_occurances, col = rgb(0.2, 0.6, 0.6))
+```
+
+
+Here is the interpretation of the output. O stands for other than serious (job safety). R is repeat violation and S is serious. W is willfully violated. 
+
+
+#### Violation types
+
+For the violation types, I can only focus on the amount of occurances for each type of violation. 
+
+```{r}
+violation_frame <- data.frame(violation_occurances)
+formattable(violation_frame, align = 'l')
+```
+
+
+## Average of Nr_Instances
+
+```{r}
+number_instances <- cleaned_data_with_violation$nr_instances
+number_instances[is.na(number_instances)] = 0
+
+
+#number_instances
+```
+
+Here is our mean:
+
+```{r}
+num_instances_mean = mean(number_instances, na.rm = TRUE)
+num_instances_mean
+```
+
+```{r}
+number_instances_median = median(number_instances, na.rm = TRUE)
+number_instances_median
+```
+
+```{r}
+num_instances_max = max(number_instances, na.rm = TRUE)
+num_instances_max
+```
+
+```{r}
+num_instances_min = min(number_instances)
+num_instances_min
+```
+
+
+```{r}
+library(formattable)
+```
+
+
+
+```{r}
+number_instances_frame <- data.frame(number_instances)
+```
+
+Our average number of instances is 5.49. The highest amount of instances is 1,115. The lowest amount of instances would be 0 as indicated by the NA output. I believe with these low values, this variable does have outliers (especially with the highest amount of instances being 1,115). 
+
+```{r}
+# Facility with 1,115 instances.
+facility_instances = cleaned_data_with_violation[cleaned_data_with_violation$nr_instances == 1115, ]
+facility_instances
+
+```
+
+
+As we can see, the facility with 1,115 number of instances is the Calipatria state prison. The violation type is labeled as O which means it is a not serious violation. 
+
+
+```{r}
+num_inst_table <- table(number_instances)
+num_inst_frame <- data.frame(num_inst_table)
+```
+
+
+
+```{r}
+library(ggplot2)
+first_plot = ggplot(num_inst_frame, mapping = aes(x = number_instances, y = Freq)) + geom_bar(stat = 'identity', color = 'blue', fill = 'green') + ggtitle('Frequency of Number of Instances') + xlab("Number of Instances") + ylab("Frequency") + theme(plot.title = element_text(hjust = 0.5))
+first_plot
+```
+
+As we can see,  1 is the most frequent amount of number of instances which is reported in our dataset which 625 frequencies throughout the entire dataset. 
+
+```{r}
+table(cleaned_data_with_violation$noviol, cleaned_data_with_violation$nr_instances)
+```
+
+
+#### Number of Instances Table
+
+```{r}
+number_instances_frame_2 <- data.frame(num_instances_min, number_instances_median, num_instances_mean, num_instances_max)
+```
+
+```{r}
+col_name <- paste(c("Minimum", "Median", "mean", "max"), sep = " ")
+names(number_instances_frame_2) <- col_name
+row_names <- paste("Number Instances")
+rownames(number_instances_frame_2) <- row_names
+number_instances_frame_2
+```
+
+```{r}
+formattable(number_instances_frame_2, align = 'l')
+```
+
+
+
+## Nr_Exposed
+
+Note: I will replace the NA values with 0. 
+
+```{r}
+number_exposed <- cleaned_data_with_violation$nr_exposed
+#number_exposed[is.na(number_exposed)] = 0
+number_exposed = na.omit(number_exposed)
+# number_exposed
+```
+
+I will now find the descriptive statistics for the number of people exposed to hazardous substances. 
+
+Here is the average amount of people exposed to a hazardous substance:
+
+```{r}
+num_expose_mean <- mean(number_exposed)
+num_expose_mean
+```
+
+```{r}
+num_expose_max <- max(number_exposed)
+num_expose_max 
+```
+
+Our highest amount of people exposed is 2,200 which is heavily alarming. 
+
+Let me find which facility had 2,200 exposed 
+
+```{r}
+facility_expose = cleaned_data_with_violation[cleaned_data_with_violation$nr_exposed == 2200, ]
+facility_expose_name = facility_expose[59, ]
+facility_expose_name
+
+```
+
+
+From this output, I can see that the facility with the highest amount exposed was the California State Prison. The violation type which they were given was an O, which indicates a "other" type of violation instead of a serious type of violation.  
+
+```{r}
+num_expose_min = min(number_exposed)
+num_expose_min
+```
+
+```{r}
+num_expose_med <- median(number_exposed)
+num_expose_med
+```
+
+
+```{r}
+num_expose_table <- table(number_exposed)
+num_expose_table
+```
+
+Here I will convert the table into a dataframe:
+
+```{r}
+num_expose_frame <- as.data.frame(num_expose_table)
+num_expose_frame <- na.omit(num_expose_frame)
+View(num_expose_frame)
+```
+
+```{r}
+library(formattable)
+```
+
+```{r}
+formattable(num_expose_frame, align = 'l')
+```
+
+```{r}
+num_expose_first_nineteen = num_expose_frame[1:19, ]
+num_expose_first_nineteen_frame = data.frame(num_expose_first_nineteen)
+num_expose_first_nineteen_frame
+```
+
+I had developed the number exposed ggplot to contain only until the amount of 20 people were exposed. 
+
+
+```{r}
+library(ggplot2)
+ggplot(num_expose_first_nineteen_frame, mapping = aes(x = number_exposed, y = Freq)) + geom_bar(stat = 'identity', color = 'brown', fill = 'yellow') + ggtitle('Frequency of the Number Exposed') + xlab("Number Exposed") + ylab("Frequency") + theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+sum(is.na(cleaned_data_with_violation$nr_exposed))
+```
+
+Since the data is subsetted to activities with violations, there is a total of 87 NA values in this columns which indicates that OSHA has not conducted inspections in these facilities despite having violations. This is a large amount of NA values which indicate that OSHA has not inspected 87 facilities which have violations. 
+
+#### Number of Exposed
+
+I will use libraries to depict the number of exposed. 
+
+
+```{r}
+library(knitr)
+```
+
+```{r}
+number_exposed_frame <- data.frame(num_expose_min, num_expose_med, num_expose_mean, num_expose_max)
+```
+ 
+ 
+```{r}
+library(tidyverse)
+```
+
+```{r}
+# number_exposed_frame %>%
+#   rename(
+#      minimum = num_expose_min,
+#      maximum = num_expose_max,
+#      mean = num_expose_mean,
+#      median = num_expose_med
+#   )
+```
+
+Let me change the names of the columns and rows of my table. 
+
+
+```{r}
+col_name <- paste(c("Minimum", "Median", "mean", "max"), sep = " ")
+names(number_exposed_frame) <- col_name
+row_names <- paste("Number Exposed")
+rownames(number_exposed_frame) <- row_names
+number_exposed_frame
+``` 
+ 
+```{r}
+colnames(number_exposed_frame)
+```
+
+```{r}
+library(knitr)
+```
+
+
+```{r}
+formattable(number_exposed_frame, align = 'l')
+```
+
+ 
+
+## Gravity Column 
+
+1 is lowest and 10 is highest. 
+
+```{r}
+gravity <- cleaned_data_with_violation$gravity
+gravity_frame <- data.frame(gravity)
+```
+
+Let me obtain some descriptive Statistics for the gravity column. 
+
+I will remove the NA values to have an accurate calculation:
+
+
+```{r}
+# gravity_cleaned <- na.omit(cleaned_data$gravity)
+# gravity_cleaned
+```
+
+
+```{r}
+gravity_table <- table(gravity_frame)
+gravity_frame_2 <- data.frame(gravity_table)
+formattable(gravity_frame_2, align = 'l')
+```
+
+
+
+```{r}
+gravity_plot <- ggplot(gravity_frame_2, aes(x=gravity_frame, y=Freq)) +geom_bar(stat = 'identity', color = 'blue', fill = 'red') + ggtitle('Frequency of the Gravity Ratings') + xlab("Gravity Rating") + ylab("Frequency") + theme(plot.title = element_text(hjust = 0.5))
+gravity_plot
+# barplot(gravity_table)
+```
+
+Nearly 250 activities had a fairly high gravity. 
+
+What do the NA's represent?
+
+Here is the amount of NA's present in our dataset:
+
+```{r}
+sum(is.na(gravity))
+```
+
+```{r}
+sum(cleaned_data$noviol== TRUE)
+```
+
+There is a total of 439 NA values in this columns which indicates that OSHA has not conducted inspections in these facilities despite having violations. This is a large amount of NA values which indicate that OSHA has not inspected 439 facilities which have violations.
+
+Let us see if the activities which had a gravity label also has a initial penalty label. 
+
+```{r}
+#sum(is.na(cleaned_data_with_violation$initial_penalty))
+x = c(1, 3, 5, 10) # gravity values
+for(i in cleaned_data_with_violation$gravity) {
+  y = ifelse(i !=  x, FALSE, TRUE)
+}
+```
+
+```{r}
+# Filter by NAs in gravity and initial penalties
+sample_frame <- cleaned_data_with_violation[complete.cases(cleaned_data_with_violation)]
+sample_frame
+```
+
+Subset to gravity and inital penalty columns. 
+
+## Descriptive Statistic Table
+
+### Descriptive Statistic Tables Per Variables
+
+
+#### Combined Data Tables
+
+#### Table for Numerical Variables 
+
+```{r}
+table_1 <- rbind(number_instances_frame_2,number_exposed_frame)
+formattable(table_1, align ='l')
+```
+
+
+
+
+
+
+
+
+### Initial Penalty
+
+We are going to treat this column along with the current penalty column as numeric. 
+
+```{r}
+initial_penalty_column <- cleaned_data_with_violation$initial_penalty
+initial_penalty_table <- table(initial_penalty_column)
+initial_penalty_table
+```
+
+
+Let me convert the intial penalty table into a data frame. 
+
+```{r}
+initial_penalty_frame <- data.frame(initial_penalty_table)
+initial_penalty_frame
+```
+
+Here is our calculation of the initial penalty mean
+
+```{r}
+mean(initial_penalty_column, na.rm = TRUE)
+```
+
+Our initial penalty mean is 1673.245, which is a large amount. This might be due to the separate labeling of different levels. 
+
+
+Here is a graph of the first 20 penalties:
+
+```{r}
+a <- initial_penalty_table[1:20]
+b = data.frame(a)
+ggplot(b, mapping = aes(x = initial_penalty_column, y = Freq)) + geom_bar(stat = 'identity', color = 'brown', fill = 'yellow')
+```
+
+These are our top 20 penalties mentioned in the intial_penalty column. 
+
+Here is the graph of the next 20 penalities from 21 - 41:
+
+```{r}
+a_2 <- initial_penalty_table[21:41]
+b_2= data.frame(a_2)
+ggplot(b_2, mapping = aes(x = initial_penalty_column, y = Freq)) + geom_bar(stat = 'identity', color = 'brown', fill = 'yellow')
+```
+
+Here is the graph of the 3rd batch of 20 penalties from 41-62:
+
+```{r}
+a_3 <- initial_penalty_table[42:62]
+b_3= data.frame(a_3)
+ggplot(b_3, mapping = aes(x = initial_penalty_column, y = Freq)) + geom_bar(stat = 'identity', color = 'brown', fill = 'yellow')
+```
+
+Now, I will graph the last batch:
+
+```{r}
+a_4 <- initial_penalty_table[63:75]
+b_4= data.frame(a_4)
+ggplot(b_4, mapping = aes(x = initial_penalty_column, y = Freq)) + geom_bar(stat = 'identity', color = 'brown', fill = 'yellow')
+```
+
+All of these graphs have different distributions with the last batch showing a bimodial distribution. 
+
+Here is geom_pointrange:
+
+```{r}
+ggplot(data = b) +
+  geom_pointrange(mapping = aes(x = initial_penalty_column, y = Freq),
+                  stat = "summary",
+                  fun.min = function(z) {quantile(z,0.25)},
+                  fun.max = function(z) {quantile(z,0.75)},
+                  fun = median)
+```
+
+This graph is not showing any correlation releationships. 
+
+### Owner Type
+
+There are clearly 4 different levels of owner types. I will form a table containing the occurances of these different owner types. 
+
+```{r}
+owner_type_column = cleaned_data$owner_type
+owner_type_column
+```
+
+
+```{r}
+owner_type_table = table(owner_type_column)
+owner_type_table
+```
+
+In this case, here are the meanings for the owner types.
+
+Owner Types:
+
+A = Private Company. 
+B = Local Government 
+C = State Government
+D = Federal Government 
+
+
+```{r}
+owner_type_frame = data.frame(owner_type_table)
+owner_type_frame
+```
+
+```{r}
+owner_type_plot <- ggplot(owner_type_frame, aes(x=owner_type_column, y=Freq, fill = owner_type_column)) +geom_bar(stat = 'identity') + scale_fill_manual(values = c("A" = "black", "B" = "#1b98e0", "C" = "brown", "D" = "navy"))+ ggtitle('Frequency of the Owner Types') + xlab("Owner Types") + ylab("Frequency") + theme(plot.title = element_text(hjust = 0.5))
+owner_type_plot
+```
+
+As we can see from this barplot, most of the owners who are listed in the violations dataset are from the state government. I believe this is a big concern that our state government is playing such a large role in the violations occuring at prisons. We can see that the next two highest institutions involved respectively are the local and federal governments. Private institutions are the lowest with only 22 cases. These results are surprising given that our governments are heavily involved in these violation cases. 
+
+Private vs. State? Either more inspection or violation. 
+
+### Union status column 
+
+The union status clearly has only 4 levels, which might mean a histogram would be an accurate way of depicting this graph. 
+
+PUT IN GITHUB. 
+
+```{r}
+union_status_column = cleaned_data$union_status
+union_status_column
+```
+
+```{r}
+union_status_column[union_status_column == "A"] <- "N"
+union_status_column[union_status_column == "B"] <- "Y"
+union_status_column
+```
+
+We have replaced the A's and B;s with the N's and Y's. 
+
+Let me drop the unused factor levels:
+
+```{r}
+union_status_column = droplevels(union_status_column)
+union_status_column
+```
+
+```{r}
+union_status_table = table(union_status_column)
+union_status_table
+```
+
+We have seen that Y represents yes for union representation during inspection while N represents no union representation present during union inspection.  
+
+Here is a barplot to view the differences:
+
+```{r}
+library(ggplot2)
+union_status_frame = data.frame(union_status_table)
+union_status_plot <- ggplot(union_status_frame, aes(x=union_status_column, y=Freq)) +geom_bar(stat = 'identity', color = 'green', fill = 'blue') + ggtitle('Frequency of the Union Statuses') + xlab("Union Status") + ylab("Frequency") + theme(plot.title = element_text(hjust = 0.5))
+union_status_plot
+```
+
+
+Here is an easier visual representation of the different owner types present in the dataset. This may be crucial in seeing how the union supports play a role in identifying hazardous substances present in our California presences. There is a near equal split of unions being and not being present during these inspections. 
+
+
+### Inspection Type
+
+```{r}
+insp_type_column = cleaned_data$insp_type
+insp_type_column
+```
+
+Find a text table
+ 
+Here are what the levels mean:
+
+A = An accident type of inspection. 
+
+B =  A complaint type of inspection. 
+
+C = A referral type of inspection. 
+
+F = A FollowUp type of inspection. 
+
+G = A Unprog. Rel type of inspection? (Combine G with J)
+
+H = A planned type of inspection. 
+
+J = A unprog. other type of inspection?
+
+M =  this indicates either a fat/cat level. The "fat" level refers to an employee fatality while the "cat" level means employee catastrophe incident. 
+
+Here is our table for all of the possible factor levels present. 
+
+```{r}
+insp_type_table = table(insp_type_column)
+insp_type_table
+```
+
+Here is our visual representation of our different inspection types:
+
+```{r}
+# Maybe a legend
+insp_type_frame = data.frame(insp_type_table)
+insp_type_plot <- ggplot(insp_type_frame, aes(x=insp_type_column, y=Freq)) +geom_bar(stat = 'identity', color = 'green', fill = 'yellow') + ggtitle('Frequency of the Inspection Types') + xlab("Inspection Types") + ylab("Frequency") + theme(plot.title = element_text(hjust = 0.5))
+insp_type_plot
+```
+
+
+
+
+#### Table for Categorical Variables 
+
+
+
+### Extra comments
+Comparing activity numbers and seeing them on the OSHA search tool. 
+
+Discrepencies! See activity numbers and seeing it in the link to see if theres anything listed on website and not in data. 
+
+Check a systematic or random sample. Alot is missing -> Do a deep dive. 
+
+Add more onto the blog. 
+
+
+min, median, maximum, mean 
+
+treat initial penalty as numeric. All of it factors to a equation. 
+
+
+
+
+
